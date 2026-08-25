@@ -102,11 +102,11 @@ export async function fetchInventoryShortfalls() {
 }
 
 export async function fetchOpenPurchaseOrders() {
-  const { data } = await api.get<{ value: PurchaseOrder[] }>(
-    '/s4-purchase-order/PurchaseOrders',
-    { params: { $filter: "POStatus eq 'Open' or POStatus eq 'InDelivery'" } },
-  )
-  return values(data)
+  const { data } = await api.get<{ value: PurchaseOrder[] }>('/s4-purchase-order/PurchaseOrders', {
+    params: { $select: 'PurchaseOrder,POStatus,SupplierID,StatisticalDeliveryDate' },
+  })
+  // Mock S/4 app-service ignores $filter; keep Open / InDelivery client-side.
+  return values(data).filter((po) => po.POStatus === 'Open' || po.POStatus === 'InDelivery')
 }
 
 export async function fetchShipment(id: string, isActive = true) {

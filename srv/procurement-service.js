@@ -38,8 +38,6 @@ module.exports = class ProcurementService extends cds.ApplicationService {
     this.on(['PUT', 'UPDATE'], draftAndActive, (req, next) => this.handleInvoicePut(req, next))
 
     this.on('criticalDelay', Shipments, (req) => this.handleCriticalDelay(req))
-    this.after('draftActivate', Shipments, (data) => this.onShipmentActivated(data))
-
     this.on('atRiskShipments', (req) => this.handleAtRiskShipments(req))
     this.on('inventoryShortfalls', (req) => this.handleInventoryShortfalls(req))
     this.on('syncVendorsFromS4', (req) => this.handleSyncVendors(req))
@@ -48,6 +46,14 @@ module.exports = class ProcurementService extends cds.ApplicationService {
     this.enforceVendorScopeOnWrite()
 
     await super.init()
+
+    // lean-draft handles draftActivate inside `handle` and never runs after('draftActivate') handlers.
+    const prevHandle = this.handle.bind(this)
+    this.handle = async (req) => {
+      const result = await prevHandle(req)
+      if (req?.event === 'draftActivate') this.onShipmentActivated(result)
+      return result
+    }
 
     this.s4po = await cds.connect.to('API_PURCHASEORDER_PROCESS')
     this.s4bp = await cds.connect.to('API_BUSINESS_PARTNER')

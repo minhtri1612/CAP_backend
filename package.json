@@ -48,6 +48,11 @@
           "dave": {
             "password": "dave",
             "roles": ["Auditor"]
+          },
+          "erin": {
+            "password": "erin",
+            "roles": ["VendorUser"],
+            "attr": { "VendorID": "22222222-2222-2222-2222-222222222222" }
           }
         }
       },

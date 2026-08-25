@@ -21,13 +21,13 @@ Cả 2 persona journey **đúng PDF** chạy mượt; UI demo-ready; README “m
 7. (Optional) Login `carol` VendorAdmin — tạo Contact cho Global Parts
 
 ## Task — Polish
-- [ ] Fix bug chặn 2 flow trên
-- [ ] UI5 styling + responsive cơ bản
-- [ ] Lazy loading routes hoàn thiện
-- [ ] READ list dùng `$select` / `$expand` gọn (PDF Performance)
-- [ ] `README.md`:
+- [x] Fix bug chặn 2 flow trên (`draftActivate` Event Mesh; Open PO client filter; `erin` vendor scope)
+- [x] UI5 styling + responsive cơ bản (Day 7–8)
+- [x] Lazy loading routes hoàn thiện
+- [x] READ list dùng `$select` / `$expand` gọn (PDF Performance)
+- [x] `README.md`:
   - Mock: 4× S/4, DMS, Event Mesh, Alert Notification, AI/OCR, XSUAA/IAS
-  - Thật (local): draft, temporal, RBAC filter, media FS, custom actions/functions, React 3 screens
+  - Thật (local): draft, temporal, RBAC filter, media FS, custom actions/functions, React screens
   - Destination `S4_API`, topic `hub/shipment/created`, roles PDF
 
 ## Rủi ro / lưu ý
@@ -35,4 +35,7 @@ Cả 2 persona journey **đúng PDF** chạy mượt; UI demo-ready; README “m
 - README mock vs thật — sếp/giám khảo chắc chắn hỏi.
 
 ## Output cuối ngày
-2 journey PDF chạy liền mạch; README hoàn chỉnh; checklist overview PDF tick được khi demo.
+- [x] 2 journey PDF chạy liền mạch (API verified: Alex draft→OCR→Finalize+Event Mesh; Erin RBAC; Sarah criticalDelay+S/4+Alert; Price timeline; carol Contact; dave 403 Shipments)
+- [x] README hoàn chỉnh (mock vs thật)
+- [x] Checklist overview PDF tick được khi demo
+- [x] Fix: Event Mesh trên Finalize — wrap `handle` sau `super.init()` (lean-draft không gọi `after('draftActivate')`); Open PO filter client-side; mock user `erin` + `vendorId` trên frontend

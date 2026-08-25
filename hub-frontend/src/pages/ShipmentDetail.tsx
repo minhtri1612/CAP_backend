@@ -29,6 +29,7 @@ import {
   type ShipmentItem,
 } from '../api/procurement'
 import { useAuth } from '../auth/AuthContext'
+import { USERS } from '../auth/users'
 import { FileUpload } from '../components/FileUpload'
 
 type FormState = {
@@ -65,7 +66,7 @@ export default function ShipmentDetail() {
   const poFromQuery = params.get('po')
   const forceDraft = params.get('draft') === '1'
   const navigate = useNavigate()
-  const { is } = useAuth()
+  const { is, user } = useAuth()
   const qc = useQueryClient()
 
   const isNew = routeId === 'new'
@@ -123,7 +124,7 @@ export default function ShipmentDetail() {
         vendorId = SUPPLIER_TO_VENDOR[remote.SupplierID] || vendorId
       }
       if (!vendorId && is('VendorUser')) {
-        vendorId = '11111111-1111-1111-1111-111111111111'
+        vendorId = USERS[user].vendorId
       }
       if (!vendorId) throw new Error('vendor_ID required')
 
