@@ -41,6 +41,8 @@ service ProcurementService {
   entity AuditLogs as projection on db.AuditLogs;
 
   function atRiskShipments() returns array of Shipments;
+
+  @(requires: 'ProcurementManager')
   function inventoryShortfalls() returns array of InventoryShortfall;
 
   @(requires: 'ProcurementManager')

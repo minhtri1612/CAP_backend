@@ -1,40 +1,35 @@
 # Procurement Hub (POC 2)
 
-CAP backend for Multi-Vendor Collaborative Procurement & Logistics Hub.
+CAP backend + React frontend for Multi-Vendor Collaborative Procurement & Logistics Hub.
 
-## Run
+## Backend
 
 ```bash
 npm install
 npm run watch
 ```
 
-- Service: http://localhost:4004
-- OData: http://localhost:4004/odata/v4/procurement/$metadata
+- API: http://localhost:4004
+- Auth: Basic (password = username)
 
-## Mock auth (password = username)
+| User | Role |
+|---|---|
+| alice | VendorUser |
+| bob | ProcurementManager |
+| carol | VendorAdmin |
+| dave | Auditor |
 
-| User | Role | VendorID |
-|---|---|---|
-| alice | VendorUser | Global Parts (11111111-1111-1111-1111-111111111111) |
-| bob | ProcurementManager | global |
-| carol | VendorAdmin | Global Parts |
-| dave | Auditor | audit read-only |
+## Frontend (Day 6-7)
 
-Production: replace mocked auth with XSUAA/IAS using xs-security.json.
+```bash
+cd hub-frontend
+npm install
+npm run dev
+```
 
-## Day 5 RBAC
+- UI: http://localhost:5173
+- Proxies /odata to CAP on :4004
+- Switch mock user in the header Select
 
-- @restrict instance filter: endor_ID = $user.VendorID
-- VendorUser: own Shipments R/W; Contacts read-only
-- VendorAdmin: Contacts R/W own vendor; Shipments read-only
-- ProcurementManager: global
-- Auditor: PriceLedger + AuditLogs read-only
-
-## Day 4 (backend)
-
-- PUT /Shipments(...)/invoiceScan (PDF)
-- Mock 4 S/4 APIs under /odata/v4/s4-*
-- criticalDelay patches mock PO delivery date
-
-React UI: Day 6-7 (not started yet).
+Screens: Dashboard (KPI / At-Risk / Shortfalls), Shipments list + Open POs, Contacts, Price Ledger.
+Detail draft form: Day 8.

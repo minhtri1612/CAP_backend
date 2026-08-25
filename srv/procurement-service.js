@@ -40,8 +40,8 @@ module.exports = class ProcurementService extends cds.ApplicationService {
     this.on('criticalDelay', Shipments, (req) => this.handleCriticalDelay(req))
     this.after('draftActivate', Shipments, (data) => this.onShipmentActivated(data))
 
-    this.on('atRiskShipments', () => [])
-    this.on('inventoryShortfalls', () => [])
+    this.on('atRiskShipments', (req) => this.handleAtRiskShipments(req))
+    this.on('inventoryShortfalls', (req) => this.handleInventoryShortfalls(req))
     this.on('syncVendorsFromS4', (req) => this.handleSyncVendors(req))
     this.on('syncProductsFromS4', (req) => this.handleSyncProducts(req))
 
@@ -200,6 +200,59 @@ module.exports = class ProcurementService extends cds.ApplicationService {
     return statisticalDate
   }
 
+  async handleAtRiskShipments() {
+    const { Shipments } = this.entities
+    const rows = await SELECT.from(Shipments).where({
+      status: { in: ['Pending', 'Shipped', 'Exception'] },
+    })
+    const today = startOfUtcDay(new Date())
+    const horizon = new Date(today)
+    horizon.setUTCDate(horizon.getUTCDate() + 7)
+
+    return (rows || []).filter((s) => {
+      if (!s.deliveryDate) return false
+      const d = new Date(s.deliveryDate)
+      if (Number.isNaN(d.getTime())) return false
+      if (s.status === 'Exception') return true
+      return d < horizon
+    })
+  }
+
+  async handleInventoryShortfalls() {
+    const products = await SELECT.from('hub.procurement.Products')
+    const shipments = await SELECT.from('hub.procurement.Shipments').columns('ID', 'status')
+    const openIds = new Set(
+      (shipments || []).filter((s) => s.status !== 'Delivered').map((s) => s.ID),
+    )
+    const items = await SELECT.from('hub.procurement.ShipmentItems').columns(
+      'parent_ID',
+      'product_ID',
+      'quantity',
+    )
+
+    const demand = {}
+    for (const item of items || []) {
+      if (!openIds.has(item.parent_ID) || !item.product_ID) continue
+      demand[item.product_ID] = (demand[item.product_ID] || 0) + Number(item.quantity || 0)
+    }
+
+    const shortfalls = []
+    for (const p of products || []) {
+      const stockQty = Number(p.stockQty || 0)
+      const openDemand = Number(demand[p.ID] || 0)
+      const shortfall = Math.max(0, openDemand - stockQty)
+      if (shortfall <= 0) continue
+      shortfalls.push({
+        product_ID: p.ID,
+        sku: p.extProductId,
+        stockQty,
+        openDemand,
+        shortfall,
+      })
+    }
+    return shortfalls
+  }
+
   enforceVendorScopeOnWrite() {
     const { Contacts, Shipments } = this.entities
     const vendorScoped = [Contacts, Shipments]
@@ -299,4 +352,8 @@ function isPastUtcDay(value) {
   const now = new Date()
   const today = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())
   return given < today
+}
+
+function startOfUtcDay(d) {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
 }
