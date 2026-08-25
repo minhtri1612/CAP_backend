@@ -1,0 +1,51 @@
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1rem;
+  border-left: 2px solid #c9d4e0;
+}
+
+.timeline li {
+  position: relative;
+  padding: 0 0 1rem 1rem;
+}
+
+.timeline .dot {
+  position: absolute;
+  left: -1.35rem;
+  top: 0.35rem;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0a6ed1;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px #0a6ed1;
+}
+
+.timeline .card {
+  background: #f8fafc;
+  border: 1px solid #e5e5e5;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+.timeline .when {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+  max-width: 640px;
+  padding: 0.75rem 0;
+}
+
+@media (max-width: 600px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
