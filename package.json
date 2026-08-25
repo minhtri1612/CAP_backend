@@ -1,0 +1,33 @@
+{
+  "name": "procurement-hub",
+  "version": "1.0.0",
+  "description": "POC 2 — Multi-Vendor Collaborative Procurement & Logistics Hub (CAP)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/minhtri1612/CAP_backend.git"
+  },
+  "license": "ISC",
+  "private": true,
+  "dependencies": {
+    "@cap-js/sqlite": "^3.0.2",
+    "@sap/cds": "^10.0.6",
+    "better-sqlite3": "^12.11.1"
+  },
+  "devDependencies": {
+    "@sap/cds-dk": "^10.0.7"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "watch": "cds watch"
+  },
+  "cds": {
+    "requires": {
+      "db": {
+        "kind": "sqlite",
+        "credentials": {
+          "url": "db.sqlite"
+        }
+      }
+    }
+  }
+}

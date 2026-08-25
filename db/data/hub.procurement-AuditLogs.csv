@@ -1,0 +1,4 @@
+ID,entityName,field,oldValue,newValue,changedBy,changedAt
+f1000001-0001-0001-0001-000000000001,PriceLedger,negotiatedPrice,11.00,11.80,alice,2025-07-01T00:00:00Z
+f1000002-0002-0002-0002-000000000002,PriceLedger,negotiatedPrice,11.80,12.20,alice,2026-01-01T00:00:00Z
+f1000003-0003-0003-0003-000000000003,PriceLedger,negotiatedPrice,400.00,415.00,bob,2026-01-01T00:00:00Z
