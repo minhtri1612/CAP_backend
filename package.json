@@ -27,6 +27,29 @@
         "credentials": {
           "url": "db.sqlite"
         }
+      },
+      "auth": {
+        "kind": "mocked",
+        "users": {
+          "alice": {
+            "password": "alice",
+            "roles": ["VendorUser"],
+            "attr": { "VendorID": "11111111-1111-1111-1111-111111111111" }
+          },
+          "bob": {
+            "password": "bob",
+            "roles": ["ProcurementManager"]
+          },
+          "carol": {
+            "password": "carol",
+            "roles": ["VendorAdmin"],
+            "attr": { "VendorID": "11111111-1111-1111-1111-111111111111" }
+          },
+          "dave": {
+            "password": "dave",
+            "roles": ["Auditor"]
+          }
+        }
       }
     }
   }

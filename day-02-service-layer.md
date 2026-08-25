@@ -4,7 +4,7 @@
 CRUD chạy được qua service, draft handling hoạt động end-to-end lần đầu; READ tối ưu Expand/Select theo PDF Performance.
 
 ## Task
-- [ ] Viết `srv/procurement-service.cds`:
+- [x] Viết `srv/procurement-service.cds`:
   - `service ProcurementService { ... }` expose:
     - `Vendors`, `Contacts`, `Products`, `Shipments`, `ShipmentItems`, `PriceLedger`, `AuditLogs`
   - Annotate `@odata.draft.enabled` trên `Shipments` (PDF Draft Handling)
@@ -13,25 +13,25 @@ CRUD chạy được qua service, draft handling hoạt động end-to-end lần
     - field audit / managed (`createdAt`, `modifiedAt`, …) readonly theo convention
   - Service level (chuẩn bị Day 5): `@(requires: 'authenticated-user')` — có thể bật sớm với mock user
 
-- [ ] Viết `srv/procurement-service.js`:
+- [x] Viết `srv/procurement-service.js`:
   - Handler cơ bản nếu cần ngoài default CAP
   - **Performance (PDF §4)**: mọi READ list mặc định khuyến khích client `$select` / `$expand` có kiểm soát; trong handler `before('READ', 'Shipments')` có thể strip expand thừa nếu cần demo
 
-- [ ] Custom CAP **functions** (chuẩn bị Dashboard PDF Screen 1 — implement body Day 6, khai báo sớm OK):
+- [x] Custom CAP **functions** (chuẩn bị Dashboard PDF Screen 1 — implement body Day 6, khai báo sớm OK):
   ```
   function atRiskShipments() returns array of Shipments;
   function inventoryShortfalls() returns array of { product_ID: UUID; sku: String; stockQty: Decimal; openDemand: Decimal; shortfall: Decimal; };
   ```
   (Logic tính lead-time vs stock / open shipments — wire đầy đủ Day 6–7)
 
-- [ ] Test CRUD qua Postman/REST client:
+- [x] Test CRUD qua Postman/REST client:
   - `GET /odata/v4/procurement/Shipments?$select=ID,status,deliveryDate&$expand=items($select=ID,quantity,unit)`
   - `POST` tạo mới, `PATCH` update, `DELETE`
   - CRUD `Contacts` cơ bản (RBAC siết Day 5)
 
-- [ ] `srv.before('SAVE')` — validate `deliveryDate` không được ở quá khứ, reject message rõ (PDF Early Validation)
+- [x] `srv.before('SAVE')` — validate `deliveryDate` không được ở quá khứ, reject message rõ (PDF Early Validation)
 
-- [ ] Test draft flow đầy đủ:
+- [x] Test draft flow đầy đủ:
   - `POST .../Shipments` → tạo draft
   - `PATCH` sửa draft (chưa commit DB chính)
   - `POST .../draftActivate` → move sang bảng active

@@ -1,6 +1,6 @@
-﻿# Procurement Hub (POC 2)
+# Procurement Hub (POC 2)
 
-CAP backend — Day 1 scaffold + data model.
+CAP backend for Multi-Vendor Collaborative Procurement & Logistics Hub.
 
 ## Run
 
@@ -10,13 +10,21 @@ npm run watch
 ```
 
 - Service: http://localhost:4004
-- OData metadata: http://localhost:4004/odata/v4/procurement/$metadata
+- OData: http://localhost:4004/odata/v4/procurement/$metadata
 
-## Seed Vendor IDs (for Day 5 RBAC)
+Auth is required (authenticated-user). Mock users (password = username):
 
-| Vendor | UUID |
-|---|---|
-| Global Parts Ltd | `11111111-1111-1111-1111-111111111111` |
-| Acme Supplies | `22222222-2222-2222-2222-222222222222` |
-| Orient Components | `33333333-3333-3333-3333-333333333333` |
-| Nordic Logistics | `44444444-4444-4444-4444-444444444444` |
+| User | Role | VendorID |
+|---|---|---|
+| alice | VendorUser | Global Parts (11111111-1111-1111-1111-111111111111) |
+| bob | ProcurementManager | - |
+| carol | VendorAdmin | Global Parts |
+| dave | Auditor | - |
+
+Example: Authorization Basic alice / alice
+
+## Day 2 checks
+
+- Draft: POST /Shipments then PATCH draft (IsActiveEntity=false) then POST .../draftActivate
+- Validation: deliveryDate in the past returns 400
+- Functions (stubs): GET /atRiskShipments() and GET /inventoryShortfalls()

@@ -1,15 +1,36 @@
 using { hub.procurement as db } from '../db/schema';
 
-/**
- * Day 1: minimal expose so $metadata + seed can be verified.
- * Draft, handlers, RBAC → Day 2+.
- */
+type InventoryShortfall {
+  product_ID : UUID;
+  sku        : String(40);
+  stockQty   : Decimal(13, 3);
+  openDemand : Decimal(13, 3);
+  shortfall  : Decimal(13, 3);
+}
+
+@path: '/odata/v4/procurement'
+@(requires: 'authenticated-user')
 service ProcurementService {
-  entity Vendors       as projection on db.Vendors;
-  entity Contacts      as projection on db.Contacts;
-  entity Products      as projection on db.Products;
-  entity Shipments     as projection on db.Shipments;
+  @readonly
+  entity Vendors as projection on db.Vendors;
+
+  entity Contacts as projection on db.Contacts;
+
+  @readonly
+  entity Products as projection on db.Products;
+
+  @odata.draft.enabled
+  entity Shipments as projection on db.Shipments;
+
   entity ShipmentItems as projection on db.ShipmentItems;
-  entity PriceLedger   as projection on db.PriceLedger;
-  entity AuditLogs     as projection on db.AuditLogs;
+
+  entity PriceLedger as projection on db.PriceLedger;
+
+  /** Clients read only; Day 3 hooks insert via db. */
+  @readonly
+  entity AuditLogs as projection on db.AuditLogs;
+
+  /** Dashboard Screen 1 — logic Day 6–7; stub returns [] today. */
+  function atRiskShipments() returns array of Shipments;
+  function inventoryShortfalls() returns array of InventoryShortfall;
 }
