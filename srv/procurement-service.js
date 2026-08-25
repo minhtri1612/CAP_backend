@@ -1,5 +1,6 @@
 const cds = require('@sap/cds')
 const { INSERT, UPDATE, SELECT } = cds.ql
+const { saveInvoicePdf, mockOcrExtract, hasLocalInvoice } = require('./media-ocr')
 
 const LIST_SHIPMENT_COLUMNS = [
   'ID',
@@ -22,26 +23,36 @@ const ALERT_EMAIL = 'procurement-mgr@example.com'
 module.exports = class ProcurementService extends cds.ApplicationService {
   async init() {
     const { Shipments, PriceLedger } = this.entities
+    const draftAndActive = Shipments.drafts ? [Shipments, Shipments.drafts] : [Shipments]
 
-    // SAVE = CREATE/UPDATE active (incl. draftActivate). Also validate draft writes.
     this.before('SAVE', Shipments, (req) => this.validateDeliveryDate(req))
     if (Shipments.drafts) {
       this.before(['CREATE', 'UPDATE'], Shipments.drafts, (req) => this.validateDeliveryDate(req))
     }
     this.before('READ', Shipments, (req) => this.limitShipmentReadPayload(req))
+    this.after('READ', Shipments, (data) => this.mixinS4Status(data))
 
     this.before('UPDATE', PriceLedger, (req) => this.captureOldPrice(req))
     this.after(['CREATE', 'UPDATE'], PriceLedger, (data, req) => this.writePriceAudit(data, req))
 
-    // Method must NOT be named criticalDelay — CAP auto-wires class methods by action name
-    // with typed args (entity, keys…), not (req).
+    this.on(['PUT', 'UPDATE'], draftAndActive, (req, next) => this.handleInvoicePut(req, next))
+
     this.on('criticalDelay', Shipments, (req) => this.handleCriticalDelay(req))
-    this.after('draftActivate', Shipments, (data, req) => this.onShipmentActivated(data, req))
+    this.after('draftActivate', Shipments, (data) => this.onShipmentActivated(data))
 
     this.on('atRiskShipments', () => [])
     this.on('inventoryShortfalls', () => [])
+    this.on('syncVendorsFromS4', (req) => this.handleSyncVendors(req))
+    this.on('syncProductsFromS4', (req) => this.handleSyncProducts(req))
 
-    return super.init()
+    this.enforceVendorScopeOnWrite()
+
+    await super.init()
+
+    this.s4po = await cds.connect.to('API_PURCHASEORDER_PROCESS')
+    this.s4bp = await cds.connect.to('API_BUSINESS_PARTNER')
+    this.s4prod = await cds.connect.to('API_PRODUCT_SRV')
+    this.s4inv = await cds.connect.to('API_SUPPLIERINVOICE_PROCESS')
   }
 
   validateDeliveryDate(req) {
@@ -71,6 +82,47 @@ module.exports = class ProcurementService extends cds.ApplicationService {
     })
   }
 
+  async mixinS4Status(results) {
+    const rows = Array.isArray(results) ? results : results ? [results] : []
+    if (!rows.length || !this.s4po) return
+
+    const pos = await this.s4po.run(SELECT.from(this.s4po.entities.PurchaseOrders))
+    const invs = await this.s4inv.run(SELECT.from(this.s4inv.entities.SupplierInvoices))
+    const poMap = Object.fromEntries((pos || []).map((p) => [p.PurchaseOrder, p]))
+    const invMap = Object.fromEntries((invs || []).map((i) => [i.PurchaseOrder, i]))
+
+    for (const row of rows) {
+      if (!row || typeof row !== 'object') continue
+      const po = poMap[row.purchaseOrder]
+      if (po) row.POStatus = po.POStatus
+      if (row.ID && hasLocalInvoice(row.ID) && invMap[row.purchaseOrder]) {
+        row.invoiceStatus = invMap[row.purchaseOrder].InvoiceStatus
+      }
+    }
+  }
+
+  async handleInvoicePut(req, next) {
+    const media = req.data?.invoiceScan
+    const key = normalizeKey(req.params?.[0])
+    let saved = null
+    if (media != null && key?.ID) {
+      saved = await saveInvoicePdf(key.ID, media)
+      if (saved?.buf) req.data.invoiceScan = saved.buf
+    }
+
+    const result = await next()
+
+    if (saved?.filePath) {
+      await new Promise((r) => setTimeout(r, 50))
+      const ocr = mockOcrExtract(saved.filePath)
+      const { Shipments } = this.entities
+      const target = key.IsActiveEntity === false && Shipments.drafts ? Shipments.drafts : Shipments
+      await UPDATE(target, key).set(ocr)
+      if (result && typeof result === 'object') Object.assign(result, ocr)
+    }
+    return result
+  }
+
   async captureOldPrice(req) {
     if (req.data?.negotiatedPrice === undefined) return
     const key = normalizeKey(req.params?.[0] || req.data?.ID)
@@ -81,7 +133,6 @@ module.exports = class ProcurementService extends cds.ApplicationService {
 
   async writePriceAudit(data, req) {
     let rows = Array.isArray(data) ? data : data && typeof data === 'object' ? [data] : []
-    // CAP may pass sparse after-results for temporal entities; fall back to request payload.
     if (!rows.length && req.data && typeof req.data === 'object') rows = [req.data]
 
     for (const row of rows) {
@@ -91,16 +142,17 @@ module.exports = class ProcurementService extends cds.ApplicationService {
       const oldValue = req.event === 'CREATE' ? null : (req._oldNegotiatedPrice ?? null)
       if (req.event === 'UPDATE' && String(oldValue) === String(newValue)) continue
 
-      const entry = {
-        ID: cds.utils.uuid(),
-        entityName: 'PriceLedger',
-        field: 'negotiatedPrice',
-        oldValue: oldValue == null ? null : String(oldValue),
-        newValue: String(newValue),
-        changedBy: req.user?.id || 'anonymous',
-        changedAt: new Date().toISOString(),
-      }
-      await cds.db.run(INSERT.into('hub.procurement.AuditLogs').entries(entry))
+      await cds.db.run(
+        INSERT.into('hub.procurement.AuditLogs').entries({
+          ID: cds.utils.uuid(),
+          entityName: 'PriceLedger',
+          field: 'negotiatedPrice',
+          oldValue: oldValue == null ? null : String(oldValue),
+          newValue: String(newValue),
+          changedBy: req.user?.id || 'anonymous',
+          changedAt: new Date().toISOString(),
+        }),
+      )
     }
   }
 
@@ -120,7 +172,6 @@ module.exports = class ProcurementService extends cds.ApplicationService {
       status: updated.status,
     }
 
-    // PDF Side Effects — mock only (not real Event Mesh / Alert Notification).
     emitShipmentEvent(EVENT_TOPIC_CREATED, payload)
     emitAlertNotification({
       subject: 'Critical delay',
@@ -129,9 +180,88 @@ module.exports = class ProcurementService extends cds.ApplicationService {
       deliveryDate: payload.deliveryDate,
     })
 
-    // TODO Day 4: patch S/4 PO StatisticalDeliveryDate via cds.connect.to('API_PURCHASEORDER_PROCESS')
+    const statisticalDate = await this.patchS4DeliveryDate(updated.purchaseOrder, updated.deliveryDate)
+    if (statisticalDate) updated.StatisticalDeliveryDate = statisticalDate
 
     return updated
+  }
+
+  async patchS4DeliveryDate(purchaseOrder, deliveryDate) {
+    if (!purchaseOrder || !this.s4po) return null
+    const d = deliveryDate ? new Date(deliveryDate) : new Date()
+    if (Number.isNaN(d.getTime())) return null
+    d.setUTCDate(d.getUTCDate() + 2)
+    const statisticalDate = d.toISOString().slice(0, 10)
+    const { PurchaseOrders } = this.s4po.entities
+    await this.s4po.run(
+      UPDATE(PurchaseOrders).set({ StatisticalDeliveryDate: statisticalDate }).where({ PurchaseOrder: purchaseOrder }),
+    )
+    console.log(`[MOCK S/4] PATCH PurchaseOrder ${purchaseOrder} StatisticalDeliveryDate=${statisticalDate}`)
+    return statisticalDate
+  }
+
+  enforceVendorScopeOnWrite() {
+    const { Contacts, Shipments } = this.entities
+    const vendorScoped = [Contacts, Shipments]
+    if (Shipments.drafts) vendorScoped.push(Shipments.drafts)
+
+    this.before(['CREATE', 'UPDATE'], Contacts, (req) => this.assertOwnVendor(req, 'vendor_ID'))
+    this.before(['CREATE', 'UPDATE'], vendorScoped, (req) => this.assertOwnVendor(req, 'vendor_ID'))
+  }
+
+  assertOwnVendor(req, field) {
+    if (req.user?.is?.('ProcurementManager')) return
+    const vendorId = req.user?.attr?.VendorID
+    if (!vendorId) return req.reject(403, 'Vendor scope is required for this operation.')
+    const value = req.data?.[field]
+    if (value != null && value !== vendorId) {
+      return req.reject(403, 'Cannot access data outside your vendor scope.')
+    }
+    if (req.event === 'CREATE' && value == null) req.data[field] = vendorId
+  }
+
+  async handleSyncVendors() {
+    const bps = await this.s4bp.run(SELECT.from(this.s4bp.entities.BusinessPartners))
+    let n = 0
+    for (const bp of bps || []) {
+      const existing = await SELECT.one.from('hub.procurement.Vendors').where({ name: bp.SupplierName })
+      if (existing) {
+        await cds.db.run(UPDATE('hub.procurement.Vendors', existing.ID).set({ country: bp.Country }))
+      } else {
+        await cds.db.run(
+          INSERT.into('hub.procurement.Vendors').entries({
+            ID: cds.utils.uuid(),
+            name: bp.SupplierName,
+            taxId: bp.BusinessPartner,
+            country: bp.Country,
+          }),
+        )
+      }
+      n++
+    }
+    return n
+  }
+
+  async handleSyncProducts() {
+    const remote = await this.s4prod.run(SELECT.from(this.s4prod.entities.Products))
+    let n = 0
+    for (const p of remote || []) {
+      const existing = await SELECT.one.from('hub.procurement.Products').where({ extProductId: p.Product })
+      if (existing) {
+        n++
+        continue
+      }
+      await cds.db.run(
+        INSERT.into('hub.procurement.Products').entries({
+          ID: cds.utils.uuid(),
+          extProductId: p.Product,
+          basePrice: 0,
+          stockQty: 0,
+        }),
+      )
+      n++
+    }
+    return n
   }
 
   onShipmentActivated(data) {
@@ -148,12 +278,10 @@ module.exports = class ProcurementService extends cds.ApplicationService {
   }
 }
 
-/** MOCK SAP Event Mesh — replace with real messaging when tenant is available. */
 function emitShipmentEvent(topic, payload) {
   console.log(`[MOCK Event Mesh] ${topic}`, payload)
 }
 
-/** MOCK BTP Alert Notification email — replace with real Alert Notification service later. */
 function emitAlertNotification(details) {
   console.log(`[MOCK Alert Notification] email → ${ALERT_EMAIL}`, details)
 }

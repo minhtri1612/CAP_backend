@@ -1,0 +1,41 @@
+{
+  "xsappname": "procurement-hub",
+  "tenant-mode": "dedicated",
+  "scopes": [
+    { "name": "$XSAPPNAME.VendorUser", "description": "External vendor read/write own data" },
+    { "name": "$XSAPPNAME.VendorAdmin", "description": "Vendor contact management" },
+    { "name": "$XSAPPNAME.ProcurementManager", "description": "Global procurement oversight" },
+    { "name": "$XSAPPNAME.Auditor", "description": "Read-only audit and temporal data" }
+  ],
+  "role-templates": [
+    {
+      "name": "VendorUser",
+      "description": "Vendor portal user",
+      "scope-references": ["$XSAPPNAME.VendorUser"],
+      "attribute-references": ["VendorID"]
+    },
+    {
+      "name": "VendorAdmin",
+      "description": "Vendor administrator",
+      "scope-references": ["$XSAPPNAME.VendorAdmin", "$XSAPPNAME.VendorUser"],
+      "attribute-references": ["VendorID"]
+    },
+    {
+      "name": "ProcurementManager",
+      "description": "Internal procurement manager",
+      "scope-references": ["$XSAPPNAME.ProcurementManager"]
+    },
+    {
+      "name": "Auditor",
+      "description": "Compliance auditor",
+      "scope-references": ["$XSAPPNAME.Auditor"]
+    }
+  ],
+  "attributes": [
+    {
+      "name": "VendorID",
+      "description": "Vendor instance scope",
+      "valueType": "string"
+    }
+  ]
+}

@@ -12,25 +12,29 @@ npm run watch
 - Service: http://localhost:4004
 - OData: http://localhost:4004/odata/v4/procurement/$metadata
 
-Auth is required (authenticated-user). Mock users (password = username):
+## Mock auth (password = username)
 
 | User | Role | VendorID |
 |---|---|---|
 | alice | VendorUser | Global Parts (11111111-1111-1111-1111-111111111111) |
-| bob | ProcurementManager | - |
+| bob | ProcurementManager | global |
 | carol | VendorAdmin | Global Parts |
-| dave | Auditor | - |
+| dave | Auditor | audit read-only |
 
-## Day 2
+Production: replace mocked auth with XSUAA/IAS using xs-security.json.
 
-- Draft: POST /Shipments then PATCH draft (IsActiveEntity=false) then POST .../draftActivate
-- Validation: deliveryDate in the past returns 400
-- Functions (stubs): GET /atRiskShipments() and GET /inventoryShortfalls()
+## Day 5 RBAC
 
-## Day 3
+- @restrict instance filter: endor_ID = $user.VendorID
+- VendorUser: own Shipments R/W; Contacts read-only
+- VendorAdmin: Contacts R/W own vendor; Shipments read-only
+- ProcurementManager: global
+- Auditor: PriceLedger + AuditLogs read-only
 
-- Temporal PriceLedger: GET /PriceLedger?sap-valid-at=2025-06-15T00:00:00.000Z
-- Audit: CREATE/PATCH PriceLedger writes AuditLogs (negotiatedPrice old/new)
-- Action: POST /Shipments(ID=...,IsActiveEntity=true)/criticalDelay -> status Exception
-- Mocks (console only, not real BTP): Event Mesh topic hub/shipment/created, Alert Notification email to procurement-mgr@example.com
-- TODO Day 4: PATCH S/4 StatisticalDeliveryDate inside criticalDelay
+## Day 4 (backend)
+
+- PUT /Shipments(...)/invoiceScan (PDF)
+- Mock 4 S/4 APIs under /odata/v4/s4-*
+- criticalDelay patches mock PO delivery date
+
+React UI: Day 6-7 (not started yet).

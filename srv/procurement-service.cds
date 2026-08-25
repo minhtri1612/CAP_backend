@@ -1,4 +1,8 @@
 using { hub.procurement as db } from '../db/schema';
+using from './external/API_PURCHASEORDER_PROCESS';
+using from './external/API_BUSINESS_PARTNER';
+using from './external/API_PRODUCT_SRV';
+using from './external/API_SUPPLIERINVOICE_PROCESS';
 
 type InventoryShortfall {
   product_ID : UUID;
@@ -20,8 +24,12 @@ service ProcurementService {
   entity Products as projection on db.Products;
 
   @odata.draft.enabled
-  entity Shipments as projection on db.Shipments actions {
-    /** Flags a critical delay: status → Exception + mock Event Mesh / Alert Notification. */
+  entity Shipments as projection on db.Shipments {
+    *,
+    virtual POStatus       : String(20),
+    virtual invoiceStatus  : String(20)
+  } actions {
+    @(requires: ['ProcurementManager', 'VendorUser'])
     action criticalDelay() returns Shipments;
   };
 
@@ -29,11 +37,14 @@ service ProcurementService {
 
   entity PriceLedger as projection on db.PriceLedger;
 
-  /** Clients read only; hooks insert via db (Day 3). */
   @readonly
   entity AuditLogs as projection on db.AuditLogs;
 
-  /** Dashboard Screen 1 — logic Day 6–7; stub returns [] today. */
   function atRiskShipments() returns array of Shipments;
   function inventoryShortfalls() returns array of InventoryShortfall;
+
+  @(requires: 'ProcurementManager')
+  function syncVendorsFromS4() returns Integer;
+  @(requires: 'ProcurementManager')
+  function syncProductsFromS4() returns Integer;
 }

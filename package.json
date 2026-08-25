@@ -50,7 +50,11 @@
             "roles": ["Auditor"]
           }
         }
-      }
+      },
+      "API_PURCHASEORDER_PROCESS": { "kind": "app-service" },
+      "API_BUSINESS_PARTNER": { "kind": "app-service" },
+      "API_PRODUCT_SRV": { "kind": "app-service" },
+      "API_SUPPLIERINVOICE_PROCESS": { "kind": "app-service" }
     }
   }
 }
