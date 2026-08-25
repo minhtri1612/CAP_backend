@@ -15,13 +15,22 @@ import {
   fetchShipments,
 } from '../api/procurement'
 import { KpiCard } from '../components/KpiCard'
+import { useAuth } from '../auth/AuthContext'
 
 export default function DashboardView() {
-  const shipmentsQ = useQuery({ queryKey: ['shipments'], queryFn: fetchShipments })
-  const atRiskQ = useQuery({ queryKey: ['at-risk'], queryFn: fetchAtRiskShipments })
+  const { is, user } = useAuth()
+  const isManager = is('ProcurementManager')
+
+  const shipmentsQ = useQuery({ queryKey: ['shipments', user], queryFn: fetchShipments })
+  const atRiskQ = useQuery({
+    queryKey: ['at-risk', user],
+    queryFn: fetchAtRiskShipments,
+    enabled: !is('Auditor'),
+  })
   const shortQ = useQuery({
-    queryKey: ['shortfalls'],
+    queryKey: ['shortfalls', user],
     queryFn: fetchInventoryShortfalls,
+    enabled: isManager,
   })
 
   const shipments = shipmentsQ.data ?? []
@@ -53,7 +62,13 @@ export default function DashboardView() {
   return (
     <div>
       <Title level="H2">Executive Dashboard</Title>
-      <p className="muted">At-Risk shipments and inventory shortfalls from CAP.</p>
+      <p className="muted">
+        {isManager
+          ? 'Manager view: global KPI, at-risk, and inventory shortfalls.'
+          : is('Auditor')
+            ? 'Auditor: use Price Ledger / Audit via API. Shipment dashboard limited.'
+            : 'Vendor-scoped view (RBAC filters shipments to your VendorID).'}
+      </p>
 
       <div className="kpi-row">
         <KpiCard label="Total" value={shipments.length} />
@@ -61,7 +76,7 @@ export default function DashboardView() {
           <KpiCard key={status} label={status} value={count} />
         ))}
         <KpiCard label="At risk" value={atRiskQ.data?.length ?? 0} />
-        <KpiCard label="Shortfalls" value={shortQ.data?.length ?? 0} />
+        {isManager && <KpiCard label="Shortfalls" value={shortQ.data?.length ?? 0} />}
       </div>
 
       <div className="grid-2">
@@ -113,20 +128,27 @@ export default function DashboardView() {
           />
         </div>
 
-        <div className="panel">
-          <Title level="H5">Inventory Shortfalls</Title>
-          {shortQ.isError && <p className="muted">Failed to load (manager role needed).</p>}
-          <AnalyticalTable
-            data={shortQ.data ?? []}
-            columns={[
-              { Header: 'SKU', accessor: 'sku' },
-              { Header: 'Stock', accessor: 'stockQty' },
-              { Header: 'Demand', accessor: 'openDemand' },
-              { Header: 'Shortfall', accessor: 'shortfall' },
-            ]}
-            visibleRows={6}
-          />
-        </div>
+        {isManager ? (
+          <div className="panel">
+            <Title level="H5">Inventory Shortfalls</Title>
+            {shortQ.isError && <p className="muted">Failed to load shortfalls.</p>}
+            <AnalyticalTable
+              data={shortQ.data ?? []}
+              columns={[
+                { Header: 'SKU', accessor: 'sku' },
+                { Header: 'Stock', accessor: 'stockQty' },
+                { Header: 'Demand', accessor: 'openDemand' },
+                { Header: 'Shortfall', accessor: 'shortfall' },
+              ]}
+              visibleRows={6}
+            />
+          </div>
+        ) : (
+          <div className="panel">
+            <Title level="H5">Inventory Shortfalls</Title>
+            <p className="muted">Manager-only (ProcurementManager).</p>
+          </div>
+        )}
       </div>
     </div>
   )

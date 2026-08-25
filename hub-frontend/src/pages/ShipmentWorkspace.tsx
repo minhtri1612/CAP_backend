@@ -17,9 +17,11 @@ import {
   type Shipment,
 } from '../api/procurement'
 import { FileUpload } from '../components/FileUpload'
+import { useAuth } from '../auth/AuthContext'
 
 export default function ShipmentWorkspace() {
   const navigate = useNavigate()
+  const { is } = useAuth()
   const [filter, setFilter] = useState('')
   const [sorting, setSorting] = useState<SortingState>([])
   const shipmentsQ = useQuery({ queryKey: ['shipments'], queryFn: fetchShipments })
@@ -48,10 +50,14 @@ export default function ShipmentWorkspace() {
     getFilteredRowModel: getFilteredRowModel(),
   })
 
+  const canCreate = is('VendorUser') || is('ProcurementManager')
+
   return (
     <div>
       <Title level="H2">Shipment Workspace</Title>
-      <p className="muted">List-detail skeleton. Detail form wires on Day 8.</p>
+      <p className="muted">
+        Sort/filter list, open POs from mock S/4. Click a row for detail + Approve Exception.
+      </p>
 
       <div className="panel" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
         <Input
@@ -60,9 +66,11 @@ export default function ShipmentWorkspace() {
           onInput={(e) => setFilter(e.target.value)}
           style={{ minWidth: 220 }}
         />
-        <Button design="Emphasized" onClick={() => navigate('/shipments/new')}>
-          New Shipment
-        </Button>
+        {canCreate && (
+          <Button design="Emphasized" onClick={() => navigate('/shipments/new')}>
+            New Shipment
+          </Button>
+        )}
         <FileUpload />
       </div>
 
@@ -96,6 +104,7 @@ export default function ShipmentWorkspace() {
 
       <div className="panel">
         <Title level="H5">Open Purchase Orders (mock S/4)</Title>
+        <p className="muted">Create from PO opens the new-shipment preview with PO preselected.</p>
         {posQ.isError && <p className="muted">Could not load mock S/4 POs.</p>}
         <table className="data">
           <thead>
@@ -104,6 +113,7 @@ export default function ShipmentWorkspace() {
               <th>Status</th>
               <th>Supplier</th>
               <th>Stat. Delivery</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -113,6 +123,19 @@ export default function ShipmentWorkspace() {
                 <td>{po.POStatus}</td>
                 <td>{po.SupplierID}</td>
                 <td>{po.StatisticalDeliveryDate}</td>
+                <td>
+                  {canCreate && (
+                    <Button
+                      design="Transparent"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        navigate(`/shipments/new?po=${po.PurchaseOrder}`)
+                      }}
+                    >
+                      Create from PO
+                    </Button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

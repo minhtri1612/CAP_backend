@@ -35,5 +35,10 @@ Vite app chạy, connect CAP; **Screen 1 PDF**: At-Risk Shipments + Inventory Sh
 - UI5 Web Components cần theme/CSS riêng.
 - Basic auth interceptor = mock — README ghi rõ ≠ XSUAA token.
 
-## Output cuối ngày
-Dashboard hiện KPI + At-Risk + Inventory Shortfalls từ CAP; shipment list + Open POs; Contacts UI cơ bản cho admin.
+## Day 7 polish (completed)
+- [x] Create from PO → `/shipments/new?po=...`
+- [x] Shipment detail loads CAP + linked mock S/4 PO
+- [x] Approve Exception button → `criticalDelay` + show StatisticalDeliveryDate
+- [x] Role-aware Dashboard (shortfalls manager-only)
+- [x] Mobile top nav when side nav hidden
+

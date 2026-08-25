@@ -84,6 +84,38 @@ export async function fetchOpenPurchaseOrders() {
   return values(data)
 }
 
+export async function fetchShipment(id: string) {
+  const { data } = await api.get<Shipment>(
+    `/procurement/Shipments(ID=${id},IsActiveEntity=true)`,
+    {
+      params: {
+        $select:
+          'ID,vendor_ID,purchaseOrder,status,deliveryDate,totalWeight,trackingNumber,batchId,POStatus,invoiceStatus',
+      },
+    },
+  )
+  return data
+}
+
+export async function fetchPurchaseOrder(po: string) {
+  const { data } = await api.get<PurchaseOrder>(
+    `/s4-purchase-order/PurchaseOrders('${po}')`,
+  )
+  return data
+}
+
+export type CriticalDelayResult = Shipment & {
+  StatisticalDeliveryDate?: string
+}
+
+export async function criticalDelay(id: string) {
+  const { data } = await api.post<CriticalDelayResult>(
+    `/procurement/Shipments(ID=${id},IsActiveEntity=true)/criticalDelay`,
+    {},
+  )
+  return data
+}
+
 export async function fetchContacts() {
   const { data } = await api.get<{ value: Contact[] }>('/procurement/Contacts')
   return values(data)

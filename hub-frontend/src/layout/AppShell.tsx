@@ -8,7 +8,7 @@ import {
   Title,
 } from '@ui5/webcomponents-react'
 import type { ReactNode } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { USERS, type MockUser } from '../auth/users'
 import './AppShell.css'
@@ -17,10 +17,28 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user, setUser, is } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const showContacts = is('VendorAdmin') || is('ProcurementManager')
 
   return (
     <div className="shell">
       <ShellBar primaryTitle="Procurement Hub" secondaryTitle="POC 2 Vendor Portal" />
+
+      <nav className="mobile-nav">
+        <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : undefined)}>
+          Dashboard
+        </NavLink>
+        <NavLink to="/shipments" className={({ isActive }) => (isActive ? 'active' : undefined)}>
+          Shipments
+        </NavLink>
+        <NavLink to="/price-ledger" className={({ isActive }) => (isActive ? 'active' : undefined)}>
+          Price Ledger
+        </NavLink>
+        {showContacts && (
+          <NavLink to="/contacts" className={({ isActive }) => (isActive ? 'active' : undefined)}>
+            Contacts
+          </NavLink>
+        )}
+      </nav>
 
       <FlexBox className="shell-body">
         <SideNavigation
@@ -45,7 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             data-path="/price-ledger"
             selected={location.pathname === '/price-ledger'}
           />
-          {(is('VendorAdmin') || is('ProcurementManager')) && (
+          {showContacts && (
             <SideNavigationItem
               text="Contacts"
               data-path="/contacts"
@@ -55,7 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SideNavigation>
 
         <main className="shell-content">
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '0.75rem' }}>
+          <div className="toolbar">
             <Title level="H4" className="shell-hint" style={{ margin: 0 }}>
               Mock Basic Auth (≠ XSUAA)
             </Title>
