@@ -20,13 +20,16 @@ service ProcurementService {
   entity Products as projection on db.Products;
 
   @odata.draft.enabled
-  entity Shipments as projection on db.Shipments;
+  entity Shipments as projection on db.Shipments actions {
+    /** Flags a critical delay: status → Exception + mock Event Mesh / Alert Notification. */
+    action criticalDelay() returns Shipments;
+  };
 
   entity ShipmentItems as projection on db.ShipmentItems;
 
   entity PriceLedger as projection on db.PriceLedger;
 
-  /** Clients read only; Day 3 hooks insert via db. */
+  /** Clients read only; hooks insert via db (Day 3). */
   @readonly
   entity AuditLogs as projection on db.AuditLogs;
 

@@ -21,10 +21,16 @@ Auth is required (authenticated-user). Mock users (password = username):
 | carol | VendorAdmin | Global Parts |
 | dave | Auditor | - |
 
-Example: Authorization Basic alice / alice
-
-## Day 2 checks
+## Day 2
 
 - Draft: POST /Shipments then PATCH draft (IsActiveEntity=false) then POST .../draftActivate
 - Validation: deliveryDate in the past returns 400
 - Functions (stubs): GET /atRiskShipments() and GET /inventoryShortfalls()
+
+## Day 3
+
+- Temporal PriceLedger: GET /PriceLedger?sap-valid-at=2025-06-15T00:00:00.000Z
+- Audit: CREATE/PATCH PriceLedger writes AuditLogs (negotiatedPrice old/new)
+- Action: POST /Shipments(ID=...,IsActiveEntity=true)/criticalDelay -> status Exception
+- Mocks (console only, not real BTP): Event Mesh topic hub/shipment/created, Alert Notification email to procurement-mgr@example.com
+- TODO Day 4: PATCH S/4 StatisticalDeliveryDate inside criticalDelay
