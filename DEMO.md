@@ -30,11 +30,12 @@ Password = username for all mock users.
 
 1. Header → **Bob (ProcurementManager)**.
 2. **Dashboard** — show KPIs, **At-Risk**, **Inventory Shortfalls**, delay chart.
-3. Open an **Exception** shipment (seed or At-Risk row) → **Approve Exception**.
+3. Open an **Exception** shipment (seed `c1000003…` or At-Risk row) → **Approve Exception**
+   - Or open a non-Exception shipment → **Flag Critical Delay** first (status → Exception), then Approve.
 4. CAP console:
-   - `[MOCK Alert Notification] email → …`
+   - `[MOCK Alert Notification] email → …` (subject: Exception approved / Critical delay)
    - `[MOCK S/4] PATCH PurchaseOrder … StatisticalDeliveryDate=…`
-5. Detail / response shows updated statistical delivery date (+2 days).
+5. After Approve: status → **Shipped**; response shows updated statistical delivery date (+2 days).
 6. **Price Ledger** → pick SKU (e.g. bearing) → timeline vs baseline.
 
 ## 3) Carol — VendorAdmin (`carol`) ~30s

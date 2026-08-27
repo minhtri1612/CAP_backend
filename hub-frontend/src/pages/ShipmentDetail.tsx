@@ -124,7 +124,9 @@ export default function ShipmentDetail() {
         vendorId = SUPPLIER_TO_VENDOR[remote.SupplierID] || vendorId
       }
       if (!vendorId && is('VendorUser')) {
-        vendorId = USERS[user].vendorId
+        const ownVendor = USERS[user].vendorId
+        if (!ownVendor) throw new Error('Mock user has no vendorId')
+        vendorId = ownVendor
       }
       if (!vendorId) throw new Error('vendor_ID required')
 
@@ -209,11 +211,15 @@ export default function ShipmentDetail() {
     onError: () => setErr('Finalize / draftActivate failed.'),
   })
 
-  const approveM = useMutation({
+  const wasException = form.status === 'Exception'
+  const delayM = useMutation({
     mutationFn: () => criticalDelay(draftId!),
     onSuccess: async (res) => {
+      const date = res.StatisticalDeliveryDate ?? 'n/a'
       setMsg(
-        `Exception approved. S/4 StatisticalDeliveryDate → ${res.StatisticalDeliveryDate ?? 'n/a'}`,
+        wasException
+          ? `Exception approved → ${res.status}. S/4 StatisticalDeliveryDate → ${date}`
+          : `Flagged critical delay → ${res.status}. S/4 StatisticalDeliveryDate → ${date}`,
       )
       await qc.invalidateQueries({ queryKey: ['shipment', draftId] })
       await qc.invalidateQueries({ queryKey: ['shipments'] })
@@ -247,7 +253,9 @@ export default function ShipmentDetail() {
   }
 
   const canWrite = is('VendorUser') || is('ProcurementManager')
-  const canApprove = canWrite && isActive && !!draftId
+  // Manager: flag delay (→ Exception) or approve existing Exception (→ Shipped + PATCH S/4).
+  const canCriticalDelay =
+    is('ProcurementManager') && isActive && !!draftId && form.status !== 'Delivered'
 
   return (
     <div>
@@ -279,13 +287,13 @@ export default function ShipmentDetail() {
             Edit as Draft
           </Button>
         )}
-        {canApprove && (
+        {canCriticalDelay && (
           <Button
-            design="Negative"
-            disabled={approveM.isPending || form.status === 'Exception'}
-            onClick={() => approveM.mutate()}
+            design={wasException ? 'Emphasized' : 'Negative'}
+            disabled={delayM.isPending}
+            onClick={() => delayM.mutate()}
           >
-            Approve Exception
+            {wasException ? 'Approve Exception' : 'Flag Critical Delay'}
           </Button>
         )}
       </div>

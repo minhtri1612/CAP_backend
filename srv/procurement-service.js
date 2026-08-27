@@ -166,9 +166,14 @@ module.exports = class ProcurementService extends cds.ApplicationService {
     const key = normalizeKey(req.params?.[0])
     if (!key?.ID) return req.reject(400, 'Shipment key is required.')
 
-    await UPDATE(this.entities.Shipments, key).set({ status: 'Exception' })
+    const current = await SELECT.one.from(this.entities.Shipments, key)
+    if (!current) return req.reject(404, 'Shipment not found.')
+
+    // Exception → Approve (resolve + PATCH S/4). Otherwise → Flag Critical Delay.
+    const approving = current.status === 'Exception'
+    const nextStatus = approving ? 'Shipped' : 'Exception'
+    await UPDATE(this.entities.Shipments, key).set({ status: nextStatus })
     const updated = await SELECT.one.from(this.entities.Shipments, key)
-    if (!updated) return req.reject(404, 'Shipment not found.')
 
     const payload = {
       shipmentId: updated.ID,
@@ -176,11 +181,12 @@ module.exports = class ProcurementService extends cds.ApplicationService {
       purchaseOrder: updated.purchaseOrder,
       deliveryDate: updated.deliveryDate,
       status: updated.status,
+      action: approving ? 'approveException' : 'flagCriticalDelay',
     }
 
     emitShipmentEvent(EVENT_TOPIC_CREATED, payload)
-    emitAlertNotification({
-      subject: 'Critical delay',
+    await emitAlertNotification({
+      subject: approving ? 'Exception approved' : 'Critical delay',
       shipmentId: payload.shipmentId,
       vendorId: payload.vendorId,
       deliveryDate: payload.deliveryDate,
@@ -341,8 +347,65 @@ function emitShipmentEvent(topic, payload) {
   console.log(`[MOCK Event Mesh] ${topic}`, payload)
 }
 
-function emitAlertNotification(details) {
-  console.log(`[MOCK Alert Notification] email → ${ALERT_EMAIL}`, details)
+/**
+ * BTP Alert Notification when service is bound; otherwise console mock (local / no entitlement).
+ * Pattern aligned with Procurement_hub reference POC.
+ */
+async function emitAlertNotification(details) {
+  const subject = details?.subject || 'Critical delay'
+  const shipmentId = details?.shipmentId || 'unknown'
+  const body =
+    details?.body ||
+    `Shipment ${shipmentId} vendor=${details?.vendorId || '-'} delivery=${details?.deliveryDate || '-'}`
+
+  try {
+    const ansCred =
+      cds.env.requires?.['alert-notification']?.credentials ||
+      cds.env.requires?.['procurement-hub-alert']?.credentials
+    if (!ansCred?.oauth_url || !ansCred?.url) {
+      console.log(`[MOCK Alert Notification] email → ${ALERT_EMAIL}`, details)
+      return
+    }
+
+    const tokenRes = await fetch(`${ansCred.oauth_url}/oauth/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: ansCred.client_id,
+        client_secret: ansCred.client_secret,
+      }),
+    })
+    const { access_token } = await tokenRes.json()
+    const alertRes = await fetch(`${ansCred.url}/cf/producer/v1/resource-events`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        eventType: 'CRITICALDELAY',
+        eventTimestamp: new Date().toISOString(),
+        severity: 'WARNING',
+        category: 'ALERT',
+        subject,
+        body,
+        resource: {
+          resourceName: 'procurement-hub',
+          resourceType: 'Shipment',
+          resourceInstance: shipmentId,
+        },
+      }),
+    })
+    if (!alertRes.ok) {
+      console.error('[AlertNotification] API error:', alertRes.status, await alertRes.text())
+    } else {
+      console.log('[AlertNotification] Alert sent:', subject)
+    }
+  } catch (err) {
+    console.error('[AlertNotification] Failed:', err.message)
+    console.log(`[MOCK Alert Notification] email → ${ALERT_EMAIL}`, details)
+  }
 }
 
 function normalizeKey(key) {

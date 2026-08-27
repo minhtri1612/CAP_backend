@@ -58,6 +58,14 @@ Auth is **mocked Basic Auth** (password = username). Switch user in the UI heade
 
 **Do not claim** this POC is bound to a real BTP tenant, live S/4, XSUAA, DMS, Event Mesh, or Alert Notification. Names and contracts match the PDF; implementations are local mocks.
 
+## BTP deploy (like reference Procurement_hub)
+
+Production target: **HANA HDI** + **XSUAA** + **Destination** + **Connectivity** + **Approuter** + React static portal.
+
+Local stays SQLite + mock Basic Auth. See [`BTP-DEPLOY.md`](BTP-DEPLOY.md) for Cockpit HANA free + `cf deploy` steps.
+
+S/4 remains **embedded mock app-services** until you configure Destination name **`S4_API`**. Alert Notification uses real REST when bound, otherwise console mock.
+
 ## Demo
 
 Step-by-step click script: [`DEMO.md`](DEMO.md) (Alex / Sarah / Carol / Dave).

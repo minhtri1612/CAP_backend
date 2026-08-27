@@ -13,3 +13,8 @@ uploads/
 .env.*
 hub-frontend/node_modules/
 hub-frontend/dist/
+mta_archives/
+*.mtar
+app/router/default-env.json
+default-env.json
+

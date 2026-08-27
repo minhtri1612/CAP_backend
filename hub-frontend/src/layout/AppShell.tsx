@@ -73,25 +73,27 @@ export function AppShell({ children }: { children: ReactNode }) {
         </SideNavigation>
 
         <main className="shell-content">
-          <div className="toolbar">
-            <Title level="H4" className="shell-hint" style={{ margin: 0 }}>
-              Mock Basic Auth (≠ XSUAA)
-            </Title>
-            <Select
-              accessibleName="Mock user"
-              onChange={(e) => {
-                const opt = e.detail.selectedOption as HTMLElement | undefined
-                const next = opt?.dataset?.user as MockUser | undefined
-                if (next) setUser(next)
-              }}
-            >
-              {(Object.keys(USERS) as MockUser[]).map((u) => (
-                <Option key={u} data-user={u} selected={u === user}>
-                  {USERS[u].label}
-                </Option>
-              ))}
-            </Select>
-          </div>
+          {import.meta.env.DEV && (
+            <div className="toolbar">
+              <Title level="H4" className="shell-hint" style={{ margin: 0 }}>
+                Mock Basic Auth (local only)
+              </Title>
+              <Select
+                accessibleName="Mock user"
+                onChange={(e) => {
+                  const opt = e.detail.selectedOption as HTMLElement | undefined
+                  const next = opt?.dataset?.user as MockUser | undefined
+                  if (next) setUser(next)
+                }}
+              >
+                {(Object.keys(USERS) as MockUser[]).map((u) => (
+                  <Option key={u} data-user={u} selected={u === user}>
+                    {USERS[u].label}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          )}
           {children}
         </main>
       </FlexBox>

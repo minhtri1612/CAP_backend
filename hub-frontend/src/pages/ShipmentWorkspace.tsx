@@ -56,7 +56,7 @@ export default function ShipmentWorkspace() {
     <div>
       <Title level="H2">Shipment Workspace</Title>
       <p className="muted">
-        Sort/filter list, open POs from mock S/4. Click a row for detail + Approve Exception.
+        Sort/filter list, open POs from mock S/4. Manager: Flag Critical Delay or Approve Exception.
       </p>
 
       <div className="panel" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>

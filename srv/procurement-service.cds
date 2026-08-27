@@ -29,7 +29,8 @@ service ProcurementService {
     virtual POStatus       : String(20),
     virtual invoiceStatus  : String(20)
   } actions {
-    @(requires: ['ProcurementManager', 'VendorUser'])
+    /** Flag delay (→ Exception) or Approve Exception (→ Shipped) + mock S/4 PATCH / Alert. */
+    @(requires: 'ProcurementManager')
     action criticalDelay() returns Shipments;
   };
 

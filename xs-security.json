@@ -2,33 +2,58 @@
   "xsappname": "procurement-hub",
   "tenant-mode": "dedicated",
   "scopes": [
-    { "name": "$XSAPPNAME.VendorUser", "description": "External vendor read/write own data" },
-    { "name": "$XSAPPNAME.VendorAdmin", "description": "Vendor contact management" },
-    { "name": "$XSAPPNAME.ProcurementManager", "description": "Global procurement oversight" },
-    { "name": "$XSAPPNAME.Auditor", "description": "Read-only audit and temporal data" }
+    {
+      "name": "$XSAPPNAME.VendorUser",
+      "description": "External vendor read/write own data"
+    },
+    {
+      "name": "$XSAPPNAME.VendorAdmin",
+      "description": "Vendor contact management"
+    },
+    {
+      "name": "$XSAPPNAME.ProcurementManager",
+      "description": "Global procurement oversight"
+    },
+    {
+      "name": "$XSAPPNAME.Auditor",
+      "description": "Read-only audit and temporal data"
+    }
   ],
   "role-templates": [
     {
       "name": "VendorUser",
       "description": "Vendor portal user",
-      "scope-references": ["$XSAPPNAME.VendorUser"],
-      "attribute-references": ["VendorID"]
+      "scope-references": [
+        "$XSAPPNAME.VendorUser"
+      ],
+      "attribute-references": [
+        "VendorID"
+      ]
     },
     {
       "name": "VendorAdmin",
       "description": "Vendor administrator",
-      "scope-references": ["$XSAPPNAME.VendorAdmin", "$XSAPPNAME.VendorUser"],
-      "attribute-references": ["VendorID"]
+      "scope-references": [
+        "$XSAPPNAME.VendorAdmin",
+        "$XSAPPNAME.VendorUser"
+      ],
+      "attribute-references": [
+        "VendorID"
+      ]
     },
     {
       "name": "ProcurementManager",
       "description": "Internal procurement manager",
-      "scope-references": ["$XSAPPNAME.ProcurementManager"]
+      "scope-references": [
+        "$XSAPPNAME.ProcurementManager"
+      ]
     },
     {
       "name": "Auditor",
       "description": "Compliance auditor",
-      "scope-references": ["$XSAPPNAME.Auditor"]
+      "scope-references": [
+        "$XSAPPNAME.Auditor"
+      ]
     }
   ],
   "attributes": [
@@ -37,5 +62,36 @@
       "description": "Vendor instance scope",
       "valueType": "string"
     }
-  ]
+  ],
+  "role-collections": [
+    {
+      "name": "ProcurementHub_VendorUser",
+      "description": "Vendor user (own VendorID)",
+      "role-template-references": [
+        "$XSAPPNAME.VendorUser"
+      ]
+    },
+    {
+      "name": "ProcurementHub_VendorAdmin",
+      "description": "Vendor admin + contacts",
+      "role-template-references": [
+        "$XSAPPNAME.VendorAdmin"
+      ]
+    },
+    {
+      "name": "ProcurementHub_Manager",
+      "description": "Procurement manager global",
+      "role-template-references": [
+        "$XSAPPNAME.ProcurementManager"
+      ]
+    },
+    {
+      "name": "ProcurementHub_Auditor",
+      "description": "Auditor read-only",
+      "role-template-references": [
+        "$XSAPPNAME.Auditor"
+      ]
+    }
+  ],
+  "authorities-inheritance": false
 }

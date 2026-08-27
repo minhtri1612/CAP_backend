@@ -63,6 +63,12 @@ export type Product = {
   stockQty?: number
 }
 
+export type Vendor = {
+  ID: string
+  name?: string
+  country?: string
+}
+
 export const SUPPLIER_TO_VENDOR: Record<string, string> = {
   GP001: '11111111-1111-1111-1111-111111111111',
   ACME02: '22222222-2222-2222-2222-222222222222',
@@ -211,6 +217,13 @@ export async function criticalDelay(id: string) {
 
 export async function fetchContacts() {
   const { data } = await api.get<{ value: Contact[] }>('/procurement/Contacts')
+  return values(data)
+}
+
+export async function fetchVendors() {
+  const { data } = await api.get<{ value: Vendor[] }>('/procurement/Vendors', {
+    params: { $select: 'ID,name,country' },
+  })
   return values(data)
 }
 

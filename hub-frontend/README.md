@@ -1,32 +1,42 @@
-# React + TypeScript + Vite
+# Hub Frontend — Procurement Portal
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React (Vite + TypeScript) UI for the Multi-Vendor Collaborative Procurement & Logistics Hub POC.
 
-Currently, two official plugins are available:
+Talks to CAP OData at `/odata/v4` (proxied to `localhost:4004` in dev).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Run
 
-## React Compiler
+From repo root, start CAP first (`npx cds serve --port 4004`), then:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Open http://localhost:5173
+
+Mock users (password = username): switch in the header — `alice`, `erin`, `bob`, `carol`, `dave`.
+
+## Screens
+
+| Route | Purpose |
+|-------|---------|
+| `/dashboard` | At-risk shipments + inventory shortfalls (manager) |
+| `/shipments` | Workspace + open POs from mock S/4 |
+| `/shipments/:id` | Draft form, PDF upload / OCR, Finalize, Flag Critical Delay / Approve Exception |
+| `/price-ledger` | Temporal price history |
+| `/contacts` | Vendor Admin contacts (scoped by `VendorID`) |
+
+## Build
+
+```bash
+npm run build
+```
+
+Output: `dist/` (also packaged by MTA as static app on BTP).
+
+## Notes
+
+- Local auth: Basic Auth via axios interceptor (`src/api/client.ts`).
+- On BTP (Approuter), relative `/odata` + XSUAA; mock user switcher is hidden.
+- S/4, OCR, Event Mesh, Alert Notification are mocked in CAP — see root `README.md`.
