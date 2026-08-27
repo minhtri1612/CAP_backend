@@ -80,4 +80,4 @@ Step-by-step click script: [`DEMO.md`](DEMO.md) (Alex / Sarah / Carol / Dave).
 
 Repo: https://github.com/minhtri1612/CAP_backend (branch `main`).
 
-Include with the submission: this README, `DEMO.md`, plan docs `00-overview.md` + `day-01`...`day-10`, and the running instructions above. Screenshots/video of the golden path are optional evidence if live demo env fails.
+Include with the submission: this README, `DEMO.md`, plan docs in `docs/` (`00-overview.md`, `day-01`…`day-10`), and the running instructions above. Screenshots/video of the golden path are optional evidence if live demo env fails.

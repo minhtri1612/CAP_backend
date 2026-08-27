@@ -5,15 +5,15 @@ Solo, from scratch, **full scope theo PDF gốc** (không cắt feature — ph�
 
 | Ngày | File | Chủ đề | Rủi ro |
 |---|---|---|---|
-| 1 (25/8) | `day-01-scaffold-data-model.md` | Scaffold CAP + `db/schema.cds` (đủ entity PDF) | Thấp |
-| 2 (26/8) | `day-02-service-layer.md` | Service layer + Draft + Expand/Select | Trung bình |
-| 3 (27/8) | `day-03-temporal-audit-action.md` | Temporal, audit, `criticalDelay` + Event Mesh + Alert Notification | Trung bình |
-| 4 (28/8) | `day-04-media-stream-mock-s4.md` | Media + OCR pre-fill + mock **4** S/4 API + PATCH PO | **Cao** |
-| 5 (29/8) | `day-05-rbac.md` | RBAC instance-level + Contacts (Vendor Admin) | **Cao** |
-| 6–7 (30–31/8) | `day-06-07-react-frontend-skeleton.md` | React + Dashboard At-Risk / Inventory Shortfalls | Trung bình |
-| 8 (1/9) | `day-08-draft-form-timeline.md` | Draft form + OCR wire + Approve→S/4 + Timeline | Trung bình |
-| 9 (2/9) | `day-09-integration-test-polish.md` | Integration 2 journey PDF golden path | Trung bình |
-| 10 (3/9) | `day-10-buffer-submission.md` | Buffer + nộp | — |
+| 1 (25/8) | [`day-01-scaffold-data-model.md`](./day-01-scaffold-data-model.md) | Scaffold CAP + `db/schema.cds` (đủ entity PDF) | Thấp |
+| 2 (26/8) | [`day-02-service-layer.md`](./day-02-service-layer.md) | Service layer + Draft + Expand/Select | Trung bình |
+| 3 (27/8) | [`day-03-temporal-audit-action.md`](./day-03-temporal-audit-action.md) | Temporal, audit, `criticalDelay` + Event Mesh + Alert Notification | Trung bình |
+| 4 (28/8) | [`day-04-media-stream-mock-s4.md`](./day-04-media-stream-mock-s4.md) | Media + OCR pre-fill + mock **4** S/4 API + PATCH PO | **Cao** |
+| 5 (29/8) | [`day-05-rbac.md`](./day-05-rbac.md) | RBAC instance-level + Contacts (Vendor Admin) | **Cao** |
+| 6–7 (30–31/8) | [`day-06-07-react-frontend-skeleton.md`](./day-06-07-react-frontend-skeleton.md) | React + Dashboard At-Risk / Inventory Shortfalls | Trung bình |
+| 8 (1/9) | [`day-08-draft-form-timeline.md`](./day-08-draft-form-timeline.md) | Draft form + OCR wire + Approve→S/4 + Timeline | Trung bình |
+| 9 (2/9) | [`day-09-integration-test-polish.md`](./day-09-integration-test-polish.md) | Integration 2 journey PDF golden path | Trung bình |
+| 10 (3/9) | [`day-10-buffer-submission.md`](./day-10-buffer-submission.md) | Buffer + nộp | — |
 
 ## Checklist khớp PDF (must-have)
 
