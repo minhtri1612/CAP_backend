@@ -11,8 +11,8 @@ annotate ProcurementService.Shipments with @restrict: [
 
 annotate ProcurementService.ShipmentItems with @restrict: [
   { grant: '*', to: 'ProcurementManager' },
-  { grant: '*', to: 'VendorUser', where: 'exists parent { vendor_ID = $user.VendorID }' },
-  { grant: 'READ', to: 'VendorAdmin', where: 'exists parent { vendor_ID = $user.VendorID }' }
+  { grant: '*', to: 'VendorUser', where: 'exists parent[vendor_ID = $user.VendorID]' },
+  { grant: 'READ', to: 'VendorAdmin', where: 'exists parent[vendor_ID = $user.VendorID]' }
 ];
 
 annotate ProcurementService.Contacts with @restrict: [

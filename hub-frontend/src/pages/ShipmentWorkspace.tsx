@@ -76,7 +76,15 @@ export default function ShipmentWorkspace() {
 
       <div className="panel">
         <Title level="H5">Shipments</Title>
-        {shipmentsQ.isError && <p className="muted">Load failed (role may be Auditor).</p>}
+        {shipmentsQ.isError && (
+          <p className="muted">
+            Load failed:{' '}
+            {(shipmentsQ.error as { response?: { data?: { error?: { message?: string } } } })?.response
+              ?.data?.error?.message ||
+              (shipmentsQ.error as Error)?.message ||
+              'check CAP / role'}
+          </p>
+        )}
         <table className="data">
           <thead>
             {table.getHeaderGroups().map((hg) => (
